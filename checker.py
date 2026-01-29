@@ -5,6 +5,7 @@ Avacta News Alert Checker
 Monitors the Avacta RSS feed for new articles and sends Telegram notifications.
 """
 
+import argparse
 import os
 import sys
 import feedparser
@@ -47,6 +48,17 @@ def send_telegram_message(bot_token: str, chat_id: str, message: str) -> bool:
         print(f"Failed to send Telegram message: {response.status_code}")
         print(response.text)
         return False
+
+
+def send_test_message(bot_token: str, chat_id: str) -> None:
+    """Send a test message to verify Telegram configuration."""
+    message = "🔔 <b>Avacta Alert Test</b>\n\nTelegram integration is working correctly!"
+    if send_telegram_message(bot_token, chat_id, message):
+        print("Test successful - Telegram is configured correctly")
+        sys.exit(0)
+    else:
+        print("Test failed - check your TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID")
+        sys.exit(1)
 
 
 def check_for_new_articles() -> None:
@@ -110,4 +122,16 @@ def check_for_new_articles() -> None:
 
 
 if __name__ == "__main__":
-    check_for_new_articles()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--test", action="store_true", help="Send test message")
+    args = parser.parse_args()
+
+    if args.test:
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+        if not bot_token or not chat_id:
+            print("Error: TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set")
+            sys.exit(1)
+        send_test_message(bot_token, chat_id)
+    else:
+        check_for_new_articles()
